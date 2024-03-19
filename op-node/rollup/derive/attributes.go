@@ -70,6 +70,7 @@ func (ba *FetchingAttributesBuilder) PreparePayloadAttributes(ctx context.Contex
 		}
 
 		deposits, err := DeriveDeposits(receipts, ba.rollupCfg.DepositContractAddress)
+		pps, err := DerivePPSUpdates(receipts, ba.rollupCfg.DepositContractAddress)
 		if err != nil {
 			// deposits may never be ignored. Failing to process them is a critical error.
 			return nil, NewCriticalError(fmt.Errorf("failed to derive some deposits: %w", err))

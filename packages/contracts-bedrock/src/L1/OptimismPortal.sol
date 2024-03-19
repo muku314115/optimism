@@ -86,6 +86,11 @@ contract OptimismPortal is Initializable, ResourceMetering, ISemver {
     /// @param success        Whether the withdrawal transaction was successful.
     event WithdrawalFinalized(bytes32 indexed withdrawalHash, bool success);
 
+    /// @custom:legacy
+    /// @notice Emitted whenever an PPS is updated.
+    /// @param amount    Ratio of the PPS.
+    event PPSUpdated(uint32 amount);
+
     /// @notice Reverts when paused.
     modifier whenNotPaused() {
         require(paused() == false, "OptimismPortal: paused");
@@ -95,6 +100,8 @@ contract OptimismPortal is Initializable, ResourceMetering, ISemver {
     /// @notice Semantic version.
     /// @custom:semver 2.4.0
     string public constant version = "2.4.0";
+
+    uint32 public PPS = 1;
 
     /// @notice Constructs the OptimismPortal contract.
     /// @param _l2Oracle Address of the L2OutputOracle contract.
@@ -113,6 +120,11 @@ contract OptimismPortal is Initializable, ResourceMetering, ISemver {
             l2Sender = Constants.DEFAULT_L2_SENDER;
         }
         __ResourceMetering_init();
+    }
+
+    function updatePPS(uint32 amount) public {
+        PPS = amount;
+        emit PPSUpdated(amount);
     }
 
     /// @notice Getter function for the address of the L2OutputOracle on this chain.
@@ -393,7 +405,7 @@ contract OptimismPortal is Initializable, ResourceMetering, ISemver {
         // Compute the opaque data that will be emitted as part of the TransactionDeposited event.
         // We use opaque data so that we can update the TransactionDeposited event in the future
         // without breaking the current interface.
-        bytes memory opaqueData = abi.encodePacked(msg.value, _value, _gasLimit, _isCreation, _data);
+        bytes memory opaqueData = abi.encodePacked(msg.value*PPS, _value, _gasLimit, _isCreation, _data);
 
         // Emit a TransactionDeposited event so that the rollup node can derive a deposit
         // transaction for this deposit.
