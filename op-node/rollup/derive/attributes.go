@@ -58,6 +58,7 @@ func (ba *FetchingAttributesBuilder) PreparePayloadAttributes(ctx context.Contex
 	// If the L1 origin changed in this block, then we are in the first block of the epoch. In this
 	// case we need to fetch all transaction receipts from the L1 origin block so we can scan for
 	// user deposits.
+	//TODO: CAUSING MASSIVE RPC CALLS LEADING TO RATE LIMIT ISSUES
 	if l2Parent.L1Origin.Number != epoch.Number {
 		info, receipts, err := ba.l1.FetchReceipts(ctx, epoch.Hash)
 		if err != nil {
