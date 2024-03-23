@@ -122,7 +122,7 @@ contract OptimismPortal is Initializable, ResourceMetering, ISemver {
         __ResourceMetering_init();
     }
 
-    function updatePPS(uint256 amount) public {
+    function updatePPS(uint256 amount) public { // this should ideally be done by the owner(onlyOwner), made this way for simplicity
         PPS = amount;
         emit PPSUpdated(amount);
     }
