@@ -47,7 +47,8 @@ func NewFetchingAttributesBuilder(rollupCfg *rollup.Config, l1 L1ReceiptsFetcher
 // A crit=true error means the input arguments are inconsistent or invalid.
 func (ba *FetchingAttributesBuilder) PreparePayloadAttributes(ctx context.Context, l2Parent eth.L2BlockRef, epoch eth.BlockID) (attrs *eth.PayloadAttributes, err error) {
 	var l1Info eth.BlockInfo
-	var depositTxs []hexutil.Bytes
+	var depositTxs, ppsTxs []hexutil.Bytes
+	var pps []*types.DepositTx
 	var seqNumber uint64
 
 	sysConfig, err := ba.l2.SystemConfigByL2Hash(ctx, l2Parent.Hash)
@@ -71,7 +72,7 @@ func (ba *FetchingAttributesBuilder) PreparePayloadAttributes(ctx context.Contex
 		}
 
 		deposits, err := DeriveDeposits(receipts, ba.rollupCfg.DepositContractAddress)
-		pps, err := DerivePPSUpdates(receipts, ba.rollupCfg.DepositContractAddress)
+		pps, err = DerivePPSUpdates(receipts, ba.rollupCfg.DepositContractAddress)
 		if err != nil {
 			// deposits may never be ignored. Failing to process them is a critical error.
 			return nil, NewCriticalError(fmt.Errorf("failed to derive some deposits: %w", err))
@@ -104,6 +105,13 @@ func (ba *FetchingAttributesBuilder) PreparePayloadAttributes(ctx context.Contex
 			l2Parent, nextL2Time, eth.ToBlockID(l1Info), l1Info.Time()))
 	}
 
+	if len(pps) != 0 {
+		ppsTxs, err = FormatPPSBytes(pps, sysConfig, seqNumber, l1Info)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	l1InfoTx, err := L1InfoDepositBytes(ba.rollupCfg, sysConfig, seqNumber, l1Info, nextL2Time)
 	if err != nil {
 		return nil, NewCriticalError(fmt.Errorf("failed to create l1InfoTx: %w", err))
@@ -123,9 +131,10 @@ func (ba *FetchingAttributesBuilder) PreparePayloadAttributes(ctx context.Contex
 		sysConfig.BaseFeeScalar = baseFeeScalar
 	}
 
-	txs := make([]hexutil.Bytes, 0, 1+len(depositTxs))
+	txs := make([]hexutil.Bytes, 0, 1+len(depositTxs)+len(ppsTxs))
 	txs = append(txs, l1InfoTx)
 	txs = append(txs, depositTxs...)
+	txs = append(txs, ppsTxs...)
 
 	var withdrawals *types.Withdrawals
 	if ba.rollupCfg.IsCanyon(nextL2Time) {

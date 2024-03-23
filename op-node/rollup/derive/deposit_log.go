@@ -96,7 +96,6 @@ func UnmarshalDepositLogEvent(ev *types.Log) (*types.DepositTx, error) {
 	return &dep, nil
 }
 
-// TODO: MAKE SHIT REAL
 func unmarshalDepositVersion0(dep *types.DepositTx, to common.Address, opaqueData []byte) error {
 	if len(opaqueData) < 32+32+8+1 {
 		return fmt.Errorf("unexpected opaqueData length: %d", len(opaqueData))

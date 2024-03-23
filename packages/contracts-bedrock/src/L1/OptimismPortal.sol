@@ -89,7 +89,7 @@ contract OptimismPortal is Initializable, ResourceMetering, ISemver {
     /// @custom:legacy
     /// @notice Emitted whenever an PPS is updated.
     /// @param amount    Ratio of the PPS.
-    event PPSUpdated(uint32 amount);
+    event PPSUpdated(uint256 amount);
 
     /// @notice Reverts when paused.
     modifier whenNotPaused() {
@@ -101,7 +101,7 @@ contract OptimismPortal is Initializable, ResourceMetering, ISemver {
     /// @custom:semver 2.4.0
     string public constant version = "2.4.0";
 
-    uint32 public PPS = 1;
+    uint256 public PPS = 1;
 
     /// @notice Constructs the OptimismPortal contract.
     /// @param _l2Oracle Address of the L2OutputOracle contract.
@@ -122,7 +122,7 @@ contract OptimismPortal is Initializable, ResourceMetering, ISemver {
         __ResourceMetering_init();
     }
 
-    function updatePPS(uint32 amount) public {
+    function updatePPS(uint256 amount) public {
         PPS = amount;
         emit PPSUpdated(amount);
     }
